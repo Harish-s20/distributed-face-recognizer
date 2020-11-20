@@ -1,12 +1,10 @@
 import os
 import uuid
+from dataclasses import dataclass
 from datetime import datetime
 
-from flask import Flask, flash, jsonify
-from flask import redirect, render_template
-from flask import request, send_from_directory
-
-from dataclasses import dataclass
+from flask import (Flask, flash, jsonify, redirect, render_template, request,
+                   send_from_directory)
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
@@ -33,6 +31,10 @@ class Person(db.Model):
     disc = db.Column(db.String(500))
     date = db.Column(db.DateTime)
 
+@app.route('/new')
+def new_upload():
+
+    return render_template('upload-form.html')
 
 @app.route('/')
 def index():
