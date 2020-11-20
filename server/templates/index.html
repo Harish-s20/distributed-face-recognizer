@@ -17,11 +17,7 @@
         <div class="row">
             <div class="col-4">
                 <form action="/upload" enctype="multipart/form-data" method="post" class="form-group form-group-md">
-                    <div class="custom-file my-2">
-                        <input type="file" name="person" class="custom-file-input" id="inputGroupFile01"
-                            aria-describedby="inputGroupFileAddon01">
-                        <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
-                    </div>
+                    <input type="file" name="person" id="person-upload" class="my-2">
                     <input type="text" name="disc" id="discription" class="form-control  my-1" placeholder="Discription">
                     <button type="submit" class="btn btn-primary  my-1">Upload</button>
                 </form>
@@ -41,17 +37,19 @@
                     Photo
                 </th>
             </tr>
+            {% for person in photo_list %}
             <tr>
                 <td>
-                    1
+                    {{ loop.index }}
                 </td>
                 <td>
-                    Harish Kumar K
+                    {{ person.person }}
                 </td>
                 <td>
-                    <img src="/photo/1.jpg" alt="" class="img thumbnail">
+                    <img src="/uploads/{{ person.person }}" alt="" class="img img-thumbnail" width="90px">
                 </td>
             </tr>
+            {% endfor %}
         </table>
     </div>
 </body>

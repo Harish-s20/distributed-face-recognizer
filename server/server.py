@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, request, jsonify, send_from_
 from werkzeug.utils import secure_filename
 
 import os
-
+import uuid
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.curdir, 'uploads')
@@ -10,13 +10,17 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.path.curdir, 'uploads')
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    photo_list = []
+    for data in os.listdir('./uploads'):
+        photo_list.append({"person":data})
+    
+    return render_template('index.html',photo_list=photo_list)
 
 
 @app.route('/photots')
 def photots():
     photo_list = []
-    for data in os.scandir('./uploads'):
+    for data in os.listdir('./uploads'):
         photo_list.append(data)
 
     return jsonify(photo_list)
@@ -36,8 +40,10 @@ def upload_photo():
         flash('No selected file')
         return redirect(request.url)
     if file:
-        filename = secure_filename(file.filename)
+        # filename = secure_filename(file.filename)
+        filename = str(uuid.uuid4())+'.'+secure_filename(file.filename).split('.')[-1]
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
     return redirect('/')
 
 
