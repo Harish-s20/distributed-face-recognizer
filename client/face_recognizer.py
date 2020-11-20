@@ -9,6 +9,8 @@ import requests
 import wget
 
 SERVER_URL = 'http://127.0.0.1:5000/'
+known_face_encodings = []
+known_face_names = []
 
 def check_server():
     while True:
@@ -19,25 +21,33 @@ def check_server():
         with open('data.json','w') as json_data:
             json_data.write(req)
 
+        content = json.loads(req)
+
+        for data in content:
+            img_url = SERVER_URL + 'uploads/' + data['file']
+            img = requests.get(img_url).content
+            print(f'downloading {data["file"]}')
+            with open(f"images/{data['file']}",'wb') as img_file:
+                img_file.write(img)
+
+        # Load a sample picture and learn how to recognize it.
+
+        with open('data.json') as json_data:
+
+            content = json.loads(''.join(json_data.readlines()))
+
+            for data in content:
+                person_image = face_recognition.load_image_file(f"images/{data['file']}")
+                person_face_encoding = face_recognition.face_encodings(person_image)[0]
+
+                known_face_encodings.append(person_face_encoding)
+                known_face_names.append(data['name'])
+
         time.sleep(10)
 
 def face_recognizer():
 
     video_capture = cv2.VideoCapture(0)
-
-    # Load a sample picture and learn how to recognize it.
-    known_face_encodings = []
-    known_face_names = []
-    with open('data.json') as json_data:
-
-        content = json.loads(json_data.readlines())
-
-        for data in content:
-            person_image = face_recognition.load_image_file(data['file'])
-            person_face_encoding = face_recognition.face_encodings(person_image)[0]
-
-            known_face_encodings.append(person_face_encoding)
-            known_face_names.append(data['name'])
 
     # Initialize some variables
     face_locations = []
@@ -74,7 +84,8 @@ def face_recognizer():
                 best_match_index = np.argmin(face_distances)
                 if matches[best_match_index]:
                     name = known_face_names[best_match_index]
-
+                    print(f"Found {name} on the frame")
+                    
                 face_names.append(name)
 
         process_this_frame = not process_this_frame
