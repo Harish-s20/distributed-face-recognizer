@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <title>Distributed face recognition system</title>
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-light justify-content-between">
+        <a class="navbar-brand">DFR system</a>
+    </nav>
+    <div class="container upload-form mt-4">
+        <div class="row">
+            <div class="col-4">
+                <form action="/upload" enctype="multipart/form-data" method="post" class="form-group form-group-md">
+                    <div class="custom-file my-2">
+                        <input type="file" name="person" class="custom-file-input" id="inputGroupFile01"
+                            aria-describedby="inputGroupFileAddon01">
+                        <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+                    </div>
+                    <input type="text" name="disc" id="discription" class="form-control  my-1" placeholder="Discription">
+                    <button type="submit" class="btn btn-primary  my-1">Upload</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="container list-photos mt-4">
+        <table class="table table-bordered text-center">
+            <tr>
+                <th>
+                    Si
+                </th>
+                <th>
+                    Discription
+                </th>
+                <th>
+                    Photo
+                </th>
+            </tr>
+            <tr>
+                <td>
+                    1
+                </td>
+                <td>
+                    Harish Kumar K
+                </td>
+                <td>
+                    <img src="/photo/1.jpg" alt="" class="img thumbnail">
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+</html>
