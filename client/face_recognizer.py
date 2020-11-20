@@ -6,7 +6,6 @@ import cv2
 import face_recognition
 import numpy as np
 import requests
-import wget
 
 SERVER_URL = 'http://127.0.0.1:5000/'
 known_face_encodings = []
@@ -85,7 +84,7 @@ def face_recognizer():
                 if matches[best_match_index]:
                     name = known_face_names[best_match_index]
                     print(f"Found {name} on the frame")
-                    
+
                 face_names.append(name)
 
         process_this_frame = not process_this_frame
