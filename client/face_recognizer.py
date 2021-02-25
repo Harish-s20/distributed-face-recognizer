@@ -1,80 +1,77 @@
 import json
 import threading
-import time
-import smtplib
 
 import cv2
 import face_recognition
 import numpy as np
 import requests
+import socketio
+
 
 SERVER_URL = 'http://127.0.0.1:5000/'
 DEBUG = True
-SERVER_RUNNING = False
+SERVER_RUNNING = True
 CONFIG_FILE = 'settings.conf'
+
+sio = socketio.Client()
+sio.connect('http://127.0.0.1:5000')
 
 known_face_encodings = []
 known_face_names = []
 
 
-def mail_serv(message):
+@sio.event
+def connect():
+    print('connection established')
 
-    config_file = open(CONFIG_FILE, 'r')
-    config = json.loads(config_file.read())
-    config_file.close()
-    mail_id = config['EMAIL_ID']
-    password = config['PASSWORD']
-    receiver = config['RECEIVER']
-    location = config['LOCATION']
 
-    s = smtplib.SMTP('smtp.gmail.com', 587)
+@sio.event
+def new_person(data):
+    cs_thread = threading.Thread(target=check_server)
 
-    s.starttls()
-    s.login(mail_id, password)
-    message += f'\n\nLocation: {location}'
-    try:
-        s.sendmail(mail_id, receiver, message)
-    except Exception:
-        pass
+    # start the threads
+    cs_thread.start()
 
-    s.quit()
+    # join the threads
+    cs_thread.join()
+    print('Message received with ', data)
 
 
 def check_server():
-    while True:
-        if SERVER_RUNNING:
-            url = SERVER_URL+'get_data'
-            req = requests.get(url).text
-            print('send request to the server')
 
-            with open('data.json', 'w') as json_data:
-                json_data.write(req)
+    if SERVER_RUNNING:
+        url = SERVER_URL+'get_data'
+        req = requests.get(url).text
+        print('send request to the server')
 
-            content = json.loads(req)
+        with open('data.json', 'w') as json_data:
+            json_data.write(req)
 
-            for data in content:
-                img_url = SERVER_URL + 'uploads/' + data['file']
-                img = requests.get(img_url).content
-                print(f'downloading {data["file"]}')
-                with open(f"images/{data['file']}", 'wb') as img_file:
-                    img_file.write(img)
+        content = json.loads(req)
 
-        # Load a sample picture and learn how to recognize it.
+        for data in content:
+            img_url = SERVER_URL + 'uploads/' + data['file']
+            img = requests.get(img_url).content
+            print(f'downloading {data["file"]}')
+            with open(f"images/{data['file']}", 'wb') as img_file:
+                img_file.write(img)
+        load_data()
 
-        with open('data.json') as json_data:
+def load_data():
+    # Load a sample picture and learn how to recognize it.
 
-            content = json.loads(''.join(json_data.readlines()))
+    with open('data.json') as json_data:
 
-            for data in content:
-                person_image = face_recognition.load_image_file(
-                    f"images/{data['file']}")
-                person_face_encoding = face_recognition.face_encodings(person_image)[
-                    0]
+        content = json.loads(''.join(json_data.readlines()))
 
-                known_face_encodings.append(person_face_encoding)
-                known_face_names.append(data['name'])
+        for data in content:
+            person_image = face_recognition.load_image_file(
+                f"images/{data['file']}")
+            person_face_encoding = face_recognition.face_encodings(person_image)[
+                0]
 
-        time.sleep(10)
+            known_face_encodings.append(person_face_encoding)
+            known_face_names.append(data['name'])
 
 
 def face_recognizer():
@@ -113,15 +110,18 @@ def face_recognizer():
 
                 face_distances = face_recognition.face_distance(
                     known_face_encodings, face_encoding)
+                print(face_distances)
                 best_match_index = np.argmin(face_distances)
                 if matches[best_match_index]:
                     name = known_face_names[best_match_index]
                     print(f"Found {name} on the frame")
                     if not DEBUG:
                         print("sending mail ...")
-                        th = threading.Thread(target=mail_serv, args=[
-                                              f"Found {name} on the frame"])
-                        th.start()
+                        config_file = open(CONFIG_FILE, 'r')
+                        config = json.loads(config_file.read())
+                        location = config['LOCATION']
+                        sio.emit("person_found", {
+                                 "person": name, "location": location})
 
                 face_names.append(name)
 
@@ -156,12 +156,12 @@ def face_recognizer():
 
 if __name__ == "__main__":
     fr_thread = threading.Thread(target=face_recognizer)
-    cs_thread = threading.Thread(target=check_server)
+    ld_thread = threading.Thread(target=load_data)
 
     # start the threads
     fr_thread.start()
-    cs_thread.start()
+    ld_thread.start()
 
     # join the threads
     fr_thread.join()
-    cs_thread.join()
+    ld_thread.start()
