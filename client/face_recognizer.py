@@ -9,15 +9,27 @@ import socketio
 
 
 SERVER_URL = 'http://127.0.0.1:5000/'
-DEBUG = True
+DEBUG = False
 SERVER_RUNNING = True
 CONFIG_FILE = 'settings.conf'
+SOURCE = "/home/lonewolf/test.mp4"
 
 sio = socketio.Client()
-sio.connect('http://127.0.0.1:5000')
+
+
+def socket_comm():
+    sio.connect('http://127.0.0.1:5000')
+    config_file = open(CONFIG_FILE, 'r')
+    config = json.loads(config_file.read())
+    auth_token = config['auth_token']
+
+    sio.emit("auth_event", {"auth_token": auth_token})
+    sio.wait()
+
 
 known_face_encodings = []
 known_face_names = []
+known_person_id = []
 
 
 @sio.event
@@ -26,7 +38,7 @@ def connect():
 
 
 @sio.event
-def new_person(data):
+def new_person():
     cs_thread = threading.Thread(target=check_server)
 
     # start the threads
@@ -34,28 +46,28 @@ def new_person(data):
 
     # join the threads
     cs_thread.join()
-    print('Message received with ', data)
+    print("new person is added")
 
 
 def check_server():
 
-    if SERVER_RUNNING:
-        url = SERVER_URL+'get_data'
-        req = requests.get(url).text
-        print('send request to the server')
+    url = SERVER_URL+'get_data'
+    req = requests.get(url).text
+    print('send request to the server')
 
-        with open('data.json', 'w') as json_data:
-            json_data.write(req)
+    with open('data.json', 'w') as json_data:
+        json_data.write(req)
 
-        content = json.loads(req)
+    content = json.loads(req)
 
-        for data in content:
-            img_url = SERVER_URL + 'uploads/' + data['file']
-            img = requests.get(img_url).content
-            print(f'downloading {data["file"]}')
-            with open(f"images/{data['file']}", 'wb') as img_file:
-                img_file.write(img)
-        load_data()
+    for data in content:
+        img_url = SERVER_URL + 'uploads/' + data['file']
+        img = requests.get(img_url).content
+        print(f'downloading {data["file"]}')
+        with open(f"images/{data['file']}", 'wb') as img_file:
+            img_file.write(img)
+    load_data()
+
 
 def load_data():
     # Load a sample picture and learn how to recognize it.
@@ -65,18 +77,21 @@ def load_data():
         content = json.loads(''.join(json_data.readlines()))
 
         for data in content:
-            person_image = face_recognition.load_image_file(
-                f"images/{data['file']}")
-            person_face_encoding = face_recognition.face_encodings(person_image)[
-                0]
+            person_image = face_recognition.load_image_file(f"images/{data['file']}")
+            person_face_encoding = face_recognition.face_encodings(person_image)[0]
 
             known_face_encodings.append(person_face_encoding)
             known_face_names.append(data['name'])
+            known_person_id.append(data['id'])
 
 
 def face_recognizer():
 
-    video_capture = cv2.VideoCapture(0)
+    video_capture = cv2.VideoCapture(SOURCE)
+
+    config_file = open(CONFIG_FILE, 'r')
+    config = json.loads(config_file.read())
+    auth_token = config['auth_token']
 
     # Initialize some variables
     face_locations = []
@@ -89,7 +104,7 @@ def face_recognizer():
         ret, frame = video_capture.read()
 
         # Resize frame of video to 1/4 size for faster face recognition processing
-        small_frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
+        small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
 
         # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
         rgb_small_frame = small_frame[:, :, ::-1]
@@ -98,30 +113,27 @@ def face_recognizer():
         if process_this_frame:
             # Find all the faces and face encodings in the current frame of video
             face_locations = face_recognition.face_locations(rgb_small_frame)
-            face_encodings = face_recognition.face_encodings(
-                rgb_small_frame, face_locations)
+            face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
             face_names = []
             for face_encoding in face_encodings:
                 # See if the face is a match for the known face(s)
-                matches = face_recognition.compare_faces(
-                    known_face_encodings, face_encoding)
+                matches = face_recognition.compare_faces(known_face_encodings, face_encoding, tolerance = 0.54)
                 name = "Unknown"
 
-                face_distances = face_recognition.face_distance(
-                    known_face_encodings, face_encoding)
+                face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
                 print(face_distances)
                 best_match_index = np.argmin(face_distances)
                 if matches[best_match_index]:
                     name = known_face_names[best_match_index]
+                    id = known_person_id[best_match_index]
                     print(f"Found {name} on the frame")
+
                     if not DEBUG:
-                        print("sending mail ...")
-                        config_file = open(CONFIG_FILE, 'r')
-                        config = json.loads(config_file.read())
-                        location = config['LOCATION']
-                        sio.emit("person_found", {
-                                 "person": name, "location": location})
+                        print("sending socket request ...")
+                        # requests.post(PERSON_FOUND_URL, json={"id": id, "name": name, "Location": auth_token})
+
+                        sio.emit("person_found", {"id": id, "name": name, "auth_token": auth_token})
 
                 face_names.append(name)
 
@@ -130,10 +142,10 @@ def face_recognizer():
         # Display the results
         for (top, right, bottom, left), name in zip(face_locations, face_names):
             # Scale back up face locations since the frame we detected in was scaled to 1/4 size
-            top *= 2
-            right *= 2
-            bottom *= 2
-            left *= 2
+            top *= 4
+            right *= 4
+            bottom *= 4
+            left *= 4
 
             # Draw a box around the face
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
@@ -143,10 +155,10 @@ def face_recognizer():
                           (right, bottom), (0, 0, 255), cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, name, (left + 6, bottom - 6),
-                        font, 1.0, (255, 255, 255), 1)
+                        font, 0.75, (255, 255, 255), 1)
 
         # Display the resulting image
-        cv2.imshow('Video', frame)
+        cv2.imshow("God's Eye", frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
@@ -155,13 +167,20 @@ def face_recognizer():
 
 
 if __name__ == "__main__":
+    # download initial data
+    if SERVER_RUNNING:
+        check_server()
+    else:
+        load_data()
+
+    sc_thread = threading.Thread(target=socket_comm)
     fr_thread = threading.Thread(target=face_recognizer)
-    ld_thread = threading.Thread(target=load_data)
 
     # start the threads
+    sc_thread.start()
+    # time.sleep(2)
     fr_thread.start()
-    ld_thread.start()
 
     # join the threads
+    sc_thread.join()
     fr_thread.join()
-    ld_thread.start()

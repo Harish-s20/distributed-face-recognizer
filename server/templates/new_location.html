@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="my-5">
+  </div>
+  {% if uid %}
+    <div class="container">
+      <h1 class="h1">
+        Location is successfully added
+      </h1>
+      <h2 class="h2">
+        Access Tocken: {{ uid }}
+      </h2>
+    </div>
+  {% else %}
+    <div class="container">
+      <form class="form-group" action="/new_location" method="post">
+        <input type="text" name="place" class="form-control my-3" placeholder="Place">
+        <input type="number" name="cam_no" class="form-control my-2" placeholder="Camera number">
+        <textarea type="text" name="disc" id="discription" class="form-control  my-1" placeholder="Discription"></textarea>
+        <button type="submit" class="btn btn-primary" class="form-control mt-3" name="button">Submit</button>
+      </form>
+    </div>
+  {% endif %}
+{% endblock %}
