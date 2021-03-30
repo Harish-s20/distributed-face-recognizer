@@ -10,8 +10,11 @@
             <th>
                 Name
             </th>
-            <th>
+            <!-- <th>
                 Discription
+            </th> -->
+            <th>
+              Live Track
             </th>
             <th>
                 Action
@@ -28,8 +31,15 @@
             <td>
                 {{ person.name }}
             </td>
-            <td>
+            <!-- <td>
                 {{ person.disc }}
+            </td> -->
+            <td>
+              {% if person.live_track %}
+                Yes
+              {% else %}
+                No
+              {% endif %}
             </td>
             <td>
                 <a href="/view/{{ person.id }}" class="btn btn-primary">View</a>

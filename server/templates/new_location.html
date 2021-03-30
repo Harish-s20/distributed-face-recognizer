@@ -13,13 +13,24 @@
       </h2>
     </div>
   {% else %}
-    <div class="container">
-      <form class="form-group" action="/new_location" method="post">
-        <input type="text" name="place" class="form-control my-3" placeholder="Place">
-        <input type="number" name="cam_no" class="form-control my-2" placeholder="Camera number">
-        <textarea type="text" name="disc" id="discription" class="form-control  my-1" placeholder="Discription"></textarea>
-        <button type="submit" class="btn btn-primary" class="form-control mt-3" name="button">Submit</button>
-      </form>
-    </div>
+    {% if update %}
+      <div class="container">
+        <form class="form-group" action="/update_location/{{location.id}}" method="post">
+          <input type="text" name="place" class="form-control my-3" placeholder="Place" value="{{location.place}}">
+          <input type="number" name="cam_no" class="form-control my-2" placeholder="Camera number" value="{{location.cam_no}}">
+          <textarea type="text" name="disc" id="discription" class="form-control  my-1" placeholder="Discription">{{location.discription}}</textarea>
+          <button type="submit" class="btn btn-primary" class="form-control mt-3" name="button">Submit</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="container">
+        <form class="form-group" action="/new_location" method="post">
+          <input type="text" name="place" class="form-control my-3" placeholder="Place">
+          <input type="number" name="cam_no" class="form-control my-2" placeholder="Camera number">
+          <textarea type="text" name="disc" id="discription" class="form-control  my-1" placeholder="Discription"></textarea>
+          <button type="submit" class="btn btn-primary" class="form-control mt-3" name="button">Submit</button>
+        </form>
+      </div>
+    {% endif %}
   {% endif %}
 {% endblock %}
