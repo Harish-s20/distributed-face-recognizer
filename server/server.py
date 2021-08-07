@@ -266,7 +266,7 @@ def view_online():
     return render_template("online_system.html", location=online_dict, title=title)
 
 
-@app.route('/update_location/<id>')
+@app.route('/update_location/<id>', methods=["GET","POST"])
 def update_location(id):
     location = Location.query.get(id)
     title = "Update Location | God's Eye"
@@ -274,7 +274,7 @@ def update_location(id):
     if request.method == "POST":
         location.place = data["place"]
         location.cam_no = data["cam_no"]
-        location.discription = data["discription"]
+        location.discription = data["disc"]
         db.session.commit()
         return redirect("/view_location")
     return render_template("new_location.html", location=location, title=title, update=True)
