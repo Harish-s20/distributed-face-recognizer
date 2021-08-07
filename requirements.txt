@@ -1,0 +1,35 @@
+bidict==0.21.2
+certifi==2021.5.30
+charset-normalizer==2.0.3
+click @ file:///D:/bld/click_1621503904640/work
+colorama @ file:///home/conda/feedstock_root/build_artifacts/colorama_1602866480661/work
+dlib @ file:///D:/bld/dlib_1617441752500/work
+dnspython==1.16.0
+eventlet==0.31.1
+face-recognition @ file:///home/conda/feedstock_root/build_artifacts/face_recognition_1619808233029/work
+face-recognition-models @ git+https://github.com/ageitgey/face_recognition_models@e67de717267507d1e9246de95692eb8be736ab61
+Flask==2.0.1
+Flask-SocketIO==5.1.0
+Flask-SQLAlchemy==2.5.1
+greenlet==1.1.0
+gTTS==2.2.3
+idna==3.2
+itsdangerous==2.0.1
+Jinja2==3.0.1
+MarkupSafe==2.0.1
+numpy @ file:///D:/bld/numpy_1626648564420/work
+olefile @ file:///home/conda/feedstock_root/build_artifacts/olefile_1602866521163/work
+opencv-python==4.5.3.56
+Pillow @ file:///D:/bld/pillow_1625677963956/work
+pypiwin32==223
+python-engineio==4.2.0
+python-socketio==5.3.0
+pyttsx3==2.71
+pywin32==301
+requests==2.26.0
+six==1.16.0
+SQLAlchemy==1.4.22
+urllib3==1.26.6
+websocket-client==1.1.0
+Werkzeug==2.0.1
+wincertstore==0.2
